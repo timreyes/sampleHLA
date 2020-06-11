@@ -1,94 +1,38 @@
 # High Level Analyzer
 # For more information and documentation, please go to https://github.com/saleae/logic2-examples
 
+from saleae.analyzers import HighLevelAnalyzer, AnalyzerFrame, StringSetting, NumberSetting, ChoicesSetting
 
-class Hla():
+
+# High level analyzers must subclass the HighLevelAnalyzer class.
+class Hla(HighLevelAnalyzer):
+    # List of settings that a user can set for this High Level Analyzer.
+    my_string_setting = StringSetting()
+    my_number_setting = NumberSetting(min=0, max=100)
+    my_choices_setting = ChoicesSetting(choices=('A', 'B'))
+
+    # An optional list of types this analyzer produces, providing a way to customize the way frames are displayed in Logic 2.
+    result_types = {
+        'mytype': {
+            'format': 'Output type: {{type}}, Input type: {{data.input_type}}'
+        }
+    }
 
     def __init__(self):
         '''
-        Initialize this HLA.
-
-        If you have any initialization to do before any methods are called, you can do it here.
-        '''
-        pass
-
-    def get_capabilities(self):
-        '''
-        Return the settings that a user can set for this High Level Analyzer. The settings that a user selects will later be passed into `set_settings`.
-
-        This method will be called first, before `set_settings` and `decode`
+        Initialize HLA.
+        Settings can be accessed using the same name used above.
         '''
 
-        return {
-            'settings': {
-                'My String Setting': {
-                    'type': 'string',
-                },
-                'My Number Setting': {
-                    'type': 'number',
-                    'minimum': 0,
-                    'maximum': 100
-                },
-                'My Choices Setting': {
-                    'type': 'choices',
-                    'choices': ('A', 'B')
-                }
-            }
-        }
+        print("Settings:", self.name, self.count, self.letter)
 
-    def set_settings(self, settings):
+    def decode(self, frame: AnalyzerFrame):
         '''
-        Handle the settings values chosen by the user, and return information about how to display the results that `decode` will return.
-
-        This method will be called second, after `get_capbilities` and before `decode`.
-        '''
-
-        if 'My Number Setting' in settings:
-            number_setting = settings['My Number Setting']
-            # You can do something with the number setting here
-            pass
-
-        if 'My String Setting' in settings:
-            pass
-
-        if 'My Choices Setting' in settings:
-            pass
-
-        # Here you can specify how output frames will be formatted in the Logic 2 UI
-        # If no format is given for a type, a default formatting will be used
-        # You can include the values from your frame data (as returned by `decode`) by wrapping their name in double braces, as shown below.
-        return {
-            'result_types': {
-                'mytype': {
-                    'format': 'Output type: {{type}}, Input type: {{data.input_type}}'
-                }
-            }
-        }
-
-    def decode(self, frame):
-        '''
-        Handle data frame from input analyzer.
-
-        `frame` will always be of the form:
-
-        {
-            'type': 'FRAME_TYPE'
-            'start_time': ...,
-            'end_time': ...,
-            'data': {
-                ...
-            }
-        }
-
-        The `type` and contents of the `data` field will depend on the input analyzer.
+        Process a frame from the input analyzer, and optionally return a single `AnalyzerFrame` or a list of `AnalyzerFrame`s.
+        The type and data values in `frame` will depend on the input analyzer.
         '''
 
         # Return the data frame itself
-        return {
-            'type': 'mytype',  # This type matches up with the type returned from `set_settings`
-            'start_time': frame['start_time'],
-            'end_time': frame['end_time'],
-            'data': {
-                'input_type': frame['type']
-            }
-        }
+        return AnalyzerFrame('mytype', frame.start_time, frame.end_time, {
+            'input_type': frame.type
+        })
